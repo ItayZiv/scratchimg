@@ -27,6 +27,8 @@ RUN apk add --no-cache \
 
 FROM scratch
 
+LABEL org.opencontainers.image.authors="scratchimg@itayziv.dev"
+
 COPY --chown=0:0 --chmod=644 /etc /etc
 COPY --chown=101:101 --chmod=644 nginx/ /nginx/
 COPY --from=build --chown=101:101 --chmod=755 /build/nginx /nginx/sbin/nginx
@@ -35,6 +37,7 @@ COPY --chown=101:101 --chmod=644 index.html /www/html/index.html
 STOPSIGNAL SIGQUIT
 
 USER nginx
+EXPOSE 8080
 
 ENTRYPOINT [ "/nginx/sbin/nginx" ]
 CMD [ "-g", "daemon off;" ]
