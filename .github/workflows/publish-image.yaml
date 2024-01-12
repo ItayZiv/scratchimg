@@ -85,10 +85,8 @@ jobs:
           annotations: ${{ steps.meta.outputs.annotations }}
           build-args: |
             NGINX_VERSION=${{ matrix.release.version }}
-          attests: |
-            "type=provenance,mode=max"
-            "type=sbom"
-          provenance: false
+          provenance: mode=max
+          sbom: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
