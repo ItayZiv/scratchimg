@@ -1,0 +1,100 @@
+name: Build and Push images
+
+on:
+  release:
+    types: ["published"]
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+env:
+  SUFFIX: ${{github.event_name == 'release' && 'tag' || 'sha'}}
+  # github.repository as <account>/<repo>
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      # This is used to complete the identity challenge
+      # with sigstore/fulcio when running outside of PRs.
+      id-token: write
+
+    strategy:
+      max-parallel: 1
+      matrix:
+        incldue:
+          - tagline: "stable"
+            version: "1.24.0"
+          - tagline: "mainline"
+            version: "1.25.3"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3.0.0
+      - name: Install cosign
+        if: github.event_name != 'pull_request'
+        uses: sigstore/cosign-installer@v3.3.0
+        with:
+          cosign-release: "v2.2.2"
+
+      - name: Log into ghcr.io
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3.0.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log into docker.io
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3.0.0
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5.5.0
+        with:
+          images: |
+            ghcr.io/${{ env.IMAGE_NAME }}
+            docker.io/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ matrix.version }}
+            type=semvar,pattern={{major}}.{{minor}},value=${{ matrix.version }}
+            type=semvar,pattern={{major}},value=${{ matrix.version }}
+            type=semver,pattern={{version}},value=${{ matrix.version }},suffix="-{{${{ ENV.SUFFIX }}}}"
+            type=semvar,pattern={{major}}.{{minor}},value=${{ matrix.version }},suffix="-{{${{ ENV.SUFFIX }}}}"
+            type=semvar,pattern={{major}},value=${{ matrix.version }},suffix="-{{${{ ENV.SUFFIX }}}}"
+            type=raw,value=${{matrix.tagline}}
+            type=raw,value=${{matrix.tagline}},suffix="-{{${{ ENV.SUFFIX }}}}"
+      - name: Build and push Docker image
+        id: build-and-push
+        uses: docker/build-push-action@v5.1.0
+        with:
+          context: .
+          file: ./Containerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+          build-args: |
+            NGINX_VERSION=${{ matrix.version }}
+          attests: |
+            "type=provenance,mode=max"
+            "type=sbom"
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Sign the published image with cosign
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          DIGEST: ${{ steps.build-and-push.outputs.digest }}
+        run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
