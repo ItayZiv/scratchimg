@@ -68,11 +68,11 @@ jobs:
             type=semver,pattern={{version}},value=${{ matrix.release.version }}
             type=semver,pattern={{major}}.{{minor}},value=${{ matrix.release.version }}
             type=semver,pattern={{major}},value=${{ matrix.release.version }}
-            type=semver,pattern={{version}},value=${{ matrix.release.version }},suffix="-{{${{ ENV.SUFFIX }}}}"
-            type=semver,pattern={{major}}.{{minor}},value=${{ matrix.release.version }},suffix="-{{${{ ENV.SUFFIX }}}}"
-            type=semver,pattern={{major}},value=${{ matrix.release.version }},suffix="-{{${{ ENV.SUFFIX }}}}"
+            type=semver,pattern={{version}},value=${{ matrix.release.version }},suffix=-{{${{ ENV.SUFFIX }}}}
+            type=semver,pattern={{major}}.{{minor}},value=${{ matrix.release.version }},suffix=-{{${{ ENV.SUFFIX }}}}
+            type=semver,pattern={{major}},value=${{ matrix.release.version }},suffix=-{{${{ ENV.SUFFIX }}}}
             type=raw,value=${{ matrix.release.name }}
-            type=raw,value=${{ matrix.release.name }},suffix="-{{${{ ENV.SUFFIX }}}}"
+            type=raw,value=${{ matrix.release.name }},suffix=-{{${{ ENV.SUFFIX }}}}
       - name: Build and push Docker image
         id: build-and-push
         uses: docker/build-push-action@v5.1.0
