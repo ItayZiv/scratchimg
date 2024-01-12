@@ -11,15 +11,6 @@ RUN apk add --no-cache --virtual .build-deps \
     build-base                               \
     gnupg
 
-# Download Nginx source code and verify GPG signature
-RUN mkdir /build && cd /build                                                       \
-    && wget -O- https://nginx.org/keys/thresh.key | gpg --import                   \
-    && wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz                 \
-    && wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz.asc             \
-    && gpg --verify nginx-${NGINX_VERSION}.tar.gz.asc nginx-${NGINX_VERSION}.tar.gz \
-    && tar xf nginx-${NGINX_VERSION}.tar.gz                                         \
-    && rm nginx-${NGINX_VERSION}.tar.gz*
-
 # Download OpenSSL source code and verify shasum and GPG signature
 RUN cd /build \
     && wget -O- https://www.openssl.org/news/openssl-security.asc | gpg --import                                       \
@@ -48,6 +39,15 @@ RUN cd /build                                                                   
     && gpg --verify pcre2-${PCRE_VERSION}.tar.gz.sig pcre2-${PCRE_VERSION}.tar.gz                                          \
     && tar xf pcre2-${PCRE_VERSION}.tar.gz                                                                                 \
     && rm pcre2-${PCRE_VERSION}.tar.gz*
+
+# Download Nginx source code and verify GPG signature
+RUN mkdir /build && cd /build                                                       \
+    && wget -O- https://nginx.org/keys/thresh.key | gpg --import                   \
+    && wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz                 \
+    && wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz.asc             \
+    && gpg --verify nginx-${NGINX_VERSION}.tar.gz.asc nginx-${NGINX_VERSION}.tar.gz \
+    && tar xf nginx-${NGINX_VERSION}.tar.gz                                         \
+    && rm nginx-${NGINX_VERSION}.tar.gz*
 
 # Build NGINX
 RUN cd /build/nginx-${NGINX_VERSION} \
