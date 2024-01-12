@@ -67,11 +67,11 @@ jobs:
             docker.io/${{ env.IMAGE_NAME }}
           tags: |
             type=semver,pattern={{version}},value=${{ matrix.version }}
-            type=semvar,pattern={{major}}.{{minor}},value=${{ matrix.version }}
-            type=semvar,pattern={{major}},value=${{ matrix.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ matrix.version }}
+            type=semver,pattern={{major}},value=${{ matrix.version }}
             type=semver,pattern={{version}},value=${{ matrix.version }},suffix="-{{${{ ENV.SUFFIX }}}}"
-            type=semvar,pattern={{major}}.{{minor}},value=${{ matrix.version }},suffix="-{{${{ ENV.SUFFIX }}}}"
-            type=semvar,pattern={{major}},value=${{ matrix.version }},suffix="-{{${{ ENV.SUFFIX }}}}"
+            type=semver,pattern={{major}}.{{minor}},value=${{ matrix.version }},suffix="-{{${{ ENV.SUFFIX }}}}"
+            type=semver,pattern={{major}},value=${{ matrix.version }},suffix="-{{${{ ENV.SUFFIX }}}}"
             type=raw,value=${{matrix.tagline}}
             type=raw,value=${{matrix.tagline}},suffix="-{{${{ ENV.SUFFIX }}}}"
       - name: Build and push Docker image
