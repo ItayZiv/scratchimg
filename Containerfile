@@ -9,17 +9,18 @@ ARG PCRE_VERSION="10.42"
 # Install build tools & pgp
 RUN apk add --no-cache --virtual .build-deps \
     build-base                               \
-    gnupg
+    gnupg                                    \
+    && mkdir /build
 
 # Download OpenSSL source code and verify shasum and GPG signature
-RUN cd /build \
-    && wget -O- https://www.openssl.org/news/openssl-security.asc | gpg --import                                       \
-    && wget https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz                                       \
-    && wget https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz.sha256                                \
-    && wget https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz.asc                                   \
+RUN cd /build                                                                                                             \
+    && wget -O- https://www.openssl.org/news/openssl-security.asc | gpg --import                                          \
+    && wget https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz                                              \
+    && wget https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz.sha256                                       \
+    && wget https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz.asc                                          \
     && echo "$(cat openssl-${OPENSSL_VERSION}.tar.gz.sha256 | xargs)  openssl-${OPENSSL_VERSION}.tar.gz" | sha256sum -c - \
-    && gpg --verify openssl-${OPENSSL_VERSION}.tar.gz.asc openssl-${OPENSSL_VERSION}.tar.gz                        \
-    && tar xf openssl-${OPENSSL_VERSION}.tar.gz                                                                    \
+    && gpg --verify openssl-${OPENSSL_VERSION}.tar.gz.asc openssl-${OPENSSL_VERSION}.tar.gz                               \
+    && tar xf openssl-${OPENSSL_VERSION}.tar.gz                                                                           \
     && rm openssl-${OPENSSL_VERSION}.tar.gz*
 
 # Download zlib source code and verify GPG signature
@@ -41,8 +42,8 @@ RUN cd /build                                                                   
     && rm pcre2-${PCRE_VERSION}.tar.gz*
 
 # Download Nginx source code and verify GPG signature
-RUN mkdir /build && cd /build                                                       \
-    && wget -O- https://nginx.org/keys/thresh.key | gpg --import                   \
+RUN cd /build                                                                       \
+    && wget -O- https://nginx.org/keys/thresh.key | gpg --import                    \
     && wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz                 \
     && wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz.asc             \
     && gpg --verify nginx-${NGINX_VERSION}.tar.gz.asc nginx-${NGINX_VERSION}.tar.gz \
@@ -50,10 +51,10 @@ RUN mkdir /build && cd /build                                                   
     && rm nginx-${NGINX_VERSION}.tar.gz*
 
 # Build NGINX
-RUN cd /build/nginx-${NGINX_VERSION} \
+RUN cd /build/nginx-${NGINX_VERSION}                                                                                                     \
     && ./configure --with-pcre=../pcre2-${PCRE_VERSION} --with-zlib=../zlib-${ZLIB_VERSION} --with-openssl=../openssl-${OPENSSL_VERSION} \
-    --builddir=/dist --prefix="/nginx" \
-    --with-cc-opt="-O2" --with-ld-opt="-s -static" \
+    --builddir=/dist --prefix="/nginx"                                                                                                   \
+    --with-cc-opt="-O2" --with-ld-opt="-s -static"                                                                                       \
     && make
 
 FROM docker.io/library/alpine AS croot
@@ -62,12 +63,12 @@ COPY --chown=0:0 /etc /croot/etc
 COPY --chown=101:101 nginx.conf /croot/nginx/conf/nginx.conf
 COPY --chown=101:101 index.html /croot/www/html/index.html
 COPY --from=build /dist/nginx /croot/nginx/sbin/nginx
-RUN chmod -R 000 /croot/* \
-    && chmod -R u=rwX,go=rX /croot/* \
+RUN chmod -R 000 /croot/*                    \
+    && chmod -R u=rwX,go=rX /croot/*         \
     && chown 101:101 /croot/nginx/sbin/nginx \
-    && chmod 755 /croot/nginx/sbin/nginx \
-    && mkdir /croot/nginx/logs \
-    && chown 101:101 /croot/nginx/logs \
+    && chmod 755 /croot/nginx/sbin/nginx     \
+    && mkdir /croot/nginx/logs               \
+    && chown 101:101 /croot/nginx/logs       \
     && chmod 775 /croot/nginx/logs
 
 FROM scratch
