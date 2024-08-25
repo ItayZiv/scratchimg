@@ -1,9 +1,9 @@
 FROM docker.io/library/alpine AS build
 
-ARG NGINX_VERSION="1.25.3"
-ARG OPENSSL_VERSION="3.0.12"
-ARG ZLIB_VERSION="1.3"
-ARG PCRE_VERSION="10.42"
+ARG NGINX_VERSION="1.27.1"
+ARG OPENSSL_VERSION="3.3.1"
+ARG ZLIB_VERSION="1.3.1"
+ARG PCRE_VERSION="10.44"
 
 
 # Install build tools & pgp
@@ -14,7 +14,7 @@ RUN apk add --no-cache --virtual .build-deps \
 
 # Download OpenSSL source code and verify shasum and GPG signature
 RUN cd /build                                                                                                             \
-    && wget -O- https://www.openssl.org/news/openssl-security.asc | gpg --import                                          \
+    && wget -O- https://openssl-library.org/news/pgpkey/openssl-security.asc | gpg --import                               \
     && wget https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz                                              \
     && wget https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz.sha256                                       \
     && wget https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz.asc                                          \
@@ -43,7 +43,7 @@ RUN cd /build                                                                   
 
 # Download Nginx source code and verify GPG signature
 RUN cd /build                                                                       \
-    && wget -O- https://nginx.org/keys/thresh.key | gpg --import                    \
+    && for key in $(wget -O- https://nginx.org/en/pgp_keys.html | grep -oE "/keys/.*\.key"); do wget -O- "https://nginx.org$key" | gpg --import; done \
     && wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz                 \
     && wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz.asc             \
     && gpg --verify nginx-${NGINX_VERSION}.tar.gz.asc nginx-${NGINX_VERSION}.tar.gz \
