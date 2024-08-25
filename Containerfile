@@ -43,7 +43,7 @@ RUN cd /build                                                                   
 
 # Download Nginx source code and verify GPG signature
 RUN cd /build                                                                       \
-    && wget -O- https://nginx.org/keys/thresh.key | gpg --import                    \
+    && wget -O- http://nginx.org/keys/nginx_signing.key | gpg --import              \
     && wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz                 \
     && wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz.asc             \
     && gpg --verify nginx-${NGINX_VERSION}.tar.gz.asc nginx-${NGINX_VERSION}.tar.gz \
