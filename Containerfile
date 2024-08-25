@@ -14,7 +14,7 @@ RUN apk add --no-cache --virtual .build-deps \
 
 # Download OpenSSL source code and verify shasum and GPG signature
 RUN cd /build                                                                                                             \
-    && wget -O- https://www.openssl.org/news/openssl-security.asc | gpg --import                                          \
+    && wget -O- https://openssl-library.org/news/pgpkey/openssl-security.asc | gpg --import                               \
     && wget https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz                                              \
     && wget https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz.sha256                                       \
     && wget https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz.asc                                          \
